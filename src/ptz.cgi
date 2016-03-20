@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
-from os import system
+import os
 import cgi
+import sys
+import traceback
 from time import gmtime, strftime
 
 # set up constants
@@ -9,7 +11,7 @@ PAN_CONST = 5
 TILT_CONST = 2
 PAN_ID = 'P1-12' 
 TILT_ID = 'P1-16' 
-VALID_DIRECTIONS = ('up', 'down', 'left', 'right', 'home')
+DIRECTIONS = ('up', 'down', 'left', 'right')
 
 def process_cgi():
     form = cgi.FieldStorage()  # Get querystring data
@@ -26,18 +28,22 @@ def main():
     errLogf = open('err.log', 'a')
 
     try:
+        id = 0
+        const = 0
+        signstr = ''
+        servocmd = ''
         if direction == 'home':
             servocmd = 'echo {}=50% > /dev/servoblaster \necho {}=50% > /dev/servoblaster\n'.format(PAN_ID, TILT_ID)
         elif direction == 'up':
             #servocmd = 'echo {}=+{}% > /dev/servoblaster\n'.format(TILT_ID, TILT_CONST)
             id = TILT_ID
             const = TILT_CONST
-            signstr = '+'
+            signstr = '-'
         elif direction == 'down':
             #servocmd = 'echo {}=-{}% > /dev/servoblaster\n'.format(TILT_ID, TILT_CONST)    
             id = TILT_ID
             const = TILT_CONST
-            signstr = '-'
+            signstr = '+'
         elif direction == 'left':
             #servocmd = ('echo {}=-{}% > /dev/servoblaster\n'.format(PAN_ID, PAN_CONST)
             id = PAN_ID
@@ -51,18 +57,23 @@ def main():
         else:
             errLogf.write('{}  Unknown direction request received: {}\n'.format(strftime('%a, %d %b %Y %H:%M:%S', gmtime()), direction))
 
-        if direction in VALID_DIRECTIONS:
+        if direction in DIRECTIONS:
             servocmd = 'echo {}={}{}% > /dev/servoblaster\n'.format(id, signstr, const)
-            if debug:
-                servoBlasterf.write(servocmd)
-            os.system(servocmd)  # write to servoblaster
+        if debug:
+            servoBlasterf.write(servocmd)
+        os.system(servocmd)  # write to servoblaster
     finally:
         if debug:
             servoBlasterf.close()
         errLogf.close()
 
-    print 'Content-type: text/html\n\n'
-
 
 if __name__ == "__main__":
-    main()
+    print 'Content-type: text/html\n\n'
+    print
+    sys.stderr = sys.stdout
+    try:
+        main()
+    except:
+        print "\n\n<PRE>"
+        traceback.print_exc()
