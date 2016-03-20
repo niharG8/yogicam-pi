@@ -10,9 +10,53 @@ Wifi adapter (optional)
 
 Software:
 1. Raspbian OS with python
-2. Servoblaster
-3. apache2 
-4. mjpg_streamer
-5. noip2 (Dynamic DNS updater client)
 
+2. Servoblaster
+https://github.com/richardghirst/PiBits/archive/master.zip
+
+3. apache2 
+
+4. mjpg_streamer
+sudo apt-get update
+sudo apt-get install libv4l-dev libjpeg8-dev subversion imagemagick
+svn co https://svn.code.sf.net/p/mjpg-streamer/code/mjpg-streamer/ mjpg-streamer
+cd mjpg-streamer/
+make USE_LIBV4L2=true clean all
+sudo make DESTDIR=/usr install
+sudo cp mjpg_streamer /usr/local/bin
+sudo cp -R www /usr/local/www
+
+5. noip2 (Dynamic DNS updater client)
+http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz
+
+
+Hardware Setup:
+Get the RPi connected to the internet via ethernet or a USB wifi adapter. Connect the pan servo PWM input to GPIO #18 and the tilt servo PWM input to GPIO #23. Using a 2A power supply, connect the +5V to the RPi +5V GPIO pin and the GND to a GND pin on the GPIO header. Connect both servos to the same power source, but make sure not to use a different GPIO ground pin, in order to avoid sinking current through RPi traces. Connect the webcam to the USB port. It will be powered through the RPi. 
+
+
+Software Setup:
+A fully functional RPi SD Card image is provided. For setup from the ground up, follow the directions below. 
+Install all software above. Set up noip2 and servoblaster to auto-start using the startnoip2 and start_servoblaster startup scripts. Just copy the scripts to /etc/init.d/ and chmod +x. 
+
+Copy ptz.cgi to /usr/lib/cgi-bin (or whatever apache is set up to use for cgi-bin)
+
+Set up /etc/apache2/apache2.conf by adding the following lines: 
+LoadModule proxy_module /usr/lib/apache2/modules/mod_proxy.so
+LoadModule proxy_http_module /usr/lib/apache2/modules/mod_proxy_http.so
+
+ProxyPass /cgi-bin/ !
+ProxyPass / http://localhost:8080/
+
+ProxyPassReverse /cgi-bin/ !
+ProxyPassReverse / http://localhost:8080/
+
+
+Ensure port 80 and 8080 are forwarded to the RPi from the router configuration. Of course, this requires a static DHCP address for the RPi, or a preferred address. 
+
+To start mjpg-streamer, use the start_yogicam.sh script, which will start the built-in mjpg-streamer server on port 8080 to stream the video and more. The html files for this server are at /var/ww/. The apache reverse proxy will automatically forward all requests to directories other than /cgi-bin/ to port 8080. Requests to /cgi-bin/ will be served from the /cgi-bin/ directory on the Pi. 
+
+
+To view the video, just navigate a web browser to http://yourdomain.no-ip.biz/index.html. The direct stream is at http://yourdomain.no-ip.biz/?action=stream. 
+
+To view on Android, install the tinyCam Monitor app, and through Developer Settings, import the custom_vendors.xml file. This will allow you to add a camera of make Yogicam, model Yogicam Advanced PTZ, which supports streaming video and pan/tilt operation. Pan and tilt operation is handled by the ptz.cgi python script, which moves the pan and tilt servos a given amount for "up", "down", "left", and "right" commands from the app. All commands can also be entered into a browser or curl as ".../cgi-bin/ptz.cgi?move=up", where any direction can be given. 
 
