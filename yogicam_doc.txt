@@ -1,0 +1,18 @@
+Yogicam v0.1
+
+Hardware:
+Raspberry Pi (Rev2)
+Logitech C270 Webcam 
+2 Micro servos
+Pan/tilt bracket
+5V 2A+ AC/DC Power Supply
+Wifi adapter (optional)
+
+Software:
+1. Raspbian OS with python
+2. Servoblaster
+3. apache2 
+4. mjpg_streamer
+5. noip2 (Dynamic DNS updater client)
+
+
