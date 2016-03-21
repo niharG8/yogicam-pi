@@ -45,7 +45,10 @@ def rotate_servo_rel(pi, pin, pct):
     """ rotate the servo on a given BCM pin by the relative % travel
     given by pct (e.g. to rotate 10% of total travel in the ccw
     direction, pct = -10)"""
-    pw_old = pi.get_servo_pulsewidth(pin)
+    try:
+        pw_old = pi.get_servo_pulsewidth(pin)
+    except:
+        pw_old = 0  # no PWM has been set yet, so assume 0 
     pct_old = pulsewidth2pct(pw_old)
     if pct_old == -25:  # no PWM output commanded, go to center first to get a reference point
        pi.set_servo_pulsewidth(pin, pct2pulsewidth(50))
