@@ -4,9 +4,14 @@ import socket
 import struct
 import binascii
 import pigpio
+import logging
 
 DASH_MAC = "7475482056cf"
 TGT_PIN = 25  # TODO: don't hardcode this
+LOG_FILENAME = 'dash_watcher.log'
+logging.basicConfig(filename=LOG_FILENAME, 
+                    level=logging.DEBUG,
+                    format='%(asctime)s - %(message)s')
 
 def eventloop(pi):
     rawSocket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(0x0003))
@@ -23,6 +28,7 @@ def eventloop(pi):
         source_mac = binascii.hexlify(arp_detailed[5])
         dest_ip = socket.inet_ntoa(arp_detailed[8])
         if source_mac == DASH_MAC:  
+            logging.debug('Dash push detected')
             toggle_pin(pi, TGT_PIN)
 
 def toggle_pin(pi, pin_bcm):
